@@ -5,29 +5,41 @@ import os
 from pyautogui import *
 import pyautogui
 import keyboard
-import PIL
 import cv2 as cv
 from windowcapture import WindowCapture
 import glob
+import math
 
 blue = (0, 33, 584, 1076 - 33)
 wincap = WindowCapture('BlueStacks App Player')
 
-# entire screen
-# im = pyautogui.screenshot(region=(0, 0, 1920, 1080))
+#Globals
+moves = []
+s_s = 1.40625
 
+def scr():
+    sesh_id = input('Sesh ID: ')
 
-# New Strat Check pixels
+    sc_folder = 'screenshots/'
+    save_path = sc_folder + sesh_id + '/'
 
+    sc_count = 0
 
-# Check shadow for tall or short    pyautogui.pixel()   pixel(198,995) (36, 27, 24)
-# print(str(pyautogui.position()) + ': ' + str(pyautogui.pixel(pyautogui.position().x, pyautogui.position().y)))
+    # q to quit
+    while keyboard.is_pressed('q') == False:
+
+        # Space for taking screenshots
+        if keyboard.is_pressed(' '):
+            screen = pyautogui.screenshot(region=blue)
+            sc_name = str(sc_count) + '.png'
+            screen.save(save_path + sc_name)
+            sc_count = sc_count + 1
 
 
 def mouse_rgb():
     while True:
         if keyboard.is_pressed(' '):
-            print(str(pyautogui.position()) + ': ' + str(pyautogui.pixel(pyautogui.position().x, pyautogui.position().y)))
+            print(str(pyautogui.position()) + ' with screen size - ' + str(s_s) + '  Color : ' + str(pyautogui.pixel(pyautogui.position().x, pyautogui.position().y)))
             time.sleep(1)
 
 # Get kid height
@@ -37,96 +49,119 @@ def kid_tall():
         now = time.time()
         if now-start > 1:
             return False
-        if pyautogui.pixel(198, 995) == (36, 27, 24):
+        if pyautogui.pixel(math.floor(198/s_s), math.floor(995/s_s)) == (36, 27, 24):
             return True
 
 
 # Check obstacle above head
 def check_above_head(): # l=left r=right n=no
-    if pyautogui.pixel(234, 743) == (167, 92, 42):
-        return 'l'
-    if pyautogui.pixel(351, 743) == (167, 92, 42):
-        return 'r'
-    return 'n'
+    r = 'l'
+    if pyautogui.pixel(math.floor(234/s_s), math.floor(743/s_s)) == (167, 92, 42):
+        r = 'l'
+        if pyautogui.pixel(math.floor(351/s_s), math.floor(743/s_s)) == (167, 92, 42):
+            r = 'lr'
+    elif pyautogui.pixel(math.floor(351/s_s), math.floor(743/s_s)) == (167, 92, 42):
+        r = 'r'
+    else:
+        r = 'n'
+
+    return r
 
 def sign_rand(x):
     return random.randint(0,x*2)-x
 
 def click_left():
-    pyautogui.click(200+sign_rand(50), 500+sign_rand(50))
+    pyautogui.click(math.floor(200+sign_rand(10))/s_s, math.floor(743+sign_rand(3))/s_s)
 
 def click_right():
-    pyautogui.click(200+sign_rand(50), 500+sign_rand(50))
+    pyautogui.click(math.floor(400+sign_rand(10))/s_s, math.floor(743+sign_rand(3))/s_s)
 
-print(sign_rand(50))
-input('s')
-#click left
-#click right
-#random sleep times
-while True:
-    print(pyautogui.pixel(234, 743))
-    obs = check_above_head()
-    if obs != 'n':
-        print(obs)
-input('s')
-print(kid_tall())
-# find img in img
+def check_glass():
+    return False
+
+def check_mult():
+    return False
+
+def click_move(m):
+    move = 'l'
+    if m == 'n' and len(moves) > 1:
+        if moves[len(moves)-1] != 'n':
+            move = moves[len(moves)-1]
+    elif m == 'l':
+        move = 'l'
+    elif m == 'r':
+        move = 'r'
+
+    if move == 'l':
+        click_left()
+    elif move == 'r':
+        click_right()
+
+def click_continue():
+    pyautogui.click(math.floor(300+sign_rand(10))/s_s, math.floor(743+sign_rand(3))/s_s)
+
+def click_open_reward():
+    pyautogui.click(math.floor(300+sign_rand(10))/s_s, math.floor(1050+sign_rand(3))/s_s)
+
+def click_close():
+    pyautogui.click(math.floor(300+sign_rand(10))/s_s, math.floor(1050+sign_rand(3))/s_s)
+
+def click_play():
+    pyautogui.click(math.floor(300+sign_rand(10))/s_s, math.floor(850+sign_rand(3))/s_s)
+
+def game_ongoing():
+    if pyautogui.pixel(math.floor(300/s_s), math.floor(260/s_s)) == (255, 255, 255):
+        print('Game Started')
+        return False
+    return True
+
+def game_started():
+    while True:
+        if pyautogui.pixel(math.floor(75/s_s), math.floor(840/s_s)) == (255, 255, 255):
+            print('Game Started')
+            return True
 
 
-input('kkkkkkk')
+def play():
+    h = 2
+    prev = 'n'
+    m = 'n'
+    if kid_tall():
+        h = 2
+    else:
+        h = 1
 
-cv_screen = wincap.get_screenshot()
-cv_screen = cv.cvtColor(cv_screen, cv.COLOR_BGR2GRAY)
+    time.sleep((random.randint(0,10)+10)/10) #1-2 s
+    while(game_ongoing()):
+        time.sleep((random.randint(0,1)+2)/10) #0.2-0.3 s
+        prev = m
+        m = check_above_head()
+        click_move(m)
+        moves.append(m)
+        time.sleep((random.randint(0,1)+3)/10) #0.3
 
-kids = os.listdir('sprites/')
+    time.sleep((random.randint(0,10)+10)/10) #1-2 s
+    click_continue()
 
-threshold = 0.3
 
-while True:
-    for kid in kids:
-        kid = cv.imread('sprites/' + kid)
-        try:
-            r = cv.matchTemplate(cv_screen, kid, cv.TM_CCOEFF_NORMED)
-        except:
-            continue
+def loop(args):
+    if(args==0):
+        while True:
+            return 0
 
-        min_val, max_val, min_loc, max_loc = cv.minMaxLoc(r)
+    else:
+        time.sleep((random.randint(0,10)+10)/10) #1-2 s
+        click_play()
+        time.sleep(5)
+        game_started()
+        time.sleep((random.randint(0,10)+10)/10) #1-2 s
+        play()
+        time.sleep((random.randint(0,10)+10)/10) #1-2 s
+        click_open_reward()
+        time.sleep((random.randint(0,10)+10)/10) #1-2 s
+        click_close()   
+        time.sleep((random.randint(0,10)+10)/10) #1-2 s
 
-        if max_val >= threshold:
-            print("ez")
 
-# cv.imshow('image', tall)
-# cv.waitKey(0)
 
-input('Start screenshot collection?')
-
-sesh_id = input('Sesh ID: ')
-
-sc_folder = 'screenshots/'
-save_path = sc_folder + sesh_id + '/'
-
-sc_count = 0
-
-# q to quit
-while keyboard.is_pressed('q') == False:
-
-    # Space for taking screenshots
-    if keyboard.is_pressed(' '):
-        screen = pyautogui.screenshot(region=blue)
-        sc_name = str(sc_count) + '.png'
-        screen.save(save_path + sc_name)
-        sc_count = sc_count + 1
-
-input('ll?')
-
-# Karate Kido 2 Order of Operations
-
-# General
-# Click battle menu, Click battle
-# jmp #Battle
-# Click continue
-# Click open reward/close
-# jmp #General
-
-# Battle
-# Check tall or short kid
+loop(input("Loop count? 0=inf | ~"))
