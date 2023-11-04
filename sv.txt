@@ -1,0 +1,81 @@
+
+
+
+
+
+
+
+
+
+
+
+
+# Check which kid, some have different maps
+# mouse_rgb()
+
+# short max 32
+
+prev = 'l'
+sl = 0.1
+max_check = 80
+bias = 0.14
+
+while True:
+    if keyboard.is_pressed('q'):
+        break
+
+    threshold = 0.75
+
+    left = pyautogui.screenshot('left.jpg', (210, 770, 250 - 210, 100))
+    time.sleep(0.01)
+    haystack_img = cv.imread('left.jpg', cv.IMREAD_UNCHANGED)
+    needle_img = cv.imread('sprites/obstacle.jpg', cv.IMREAD_UNCHANGED)
+    l_result = cv.matchTemplate(haystack_img, needle_img, cv.TM_CCOEFF_NORMED)
+    l_min_val, l_max_val, l_min_loc, l_max_loc = cv.minMaxLoc(l_result)
+
+    right = pyautogui.screenshot('right.jpg', (340, 770, 475 - 340, 100))
+    time.sleep(0.01)
+    haystack_img = cv.imread('right.jpg', cv.IMREAD_UNCHANGED)
+    needle_img = cv.imread('sprites/obstacle2.jpg', cv.IMREAD_UNCHANGED)
+    r_result = cv.matchTemplate(haystack_img, needle_img, cv.TM_CCOEFF_NORMED)
+    r_min_val, r_max_val, r_min_loc, r_max_loc = cv.minMaxLoc(r_result)
+
+    print(str(l_max_val) + " " + str(l_max_loc))
+    print(str(r_max_val) + " " + str(r_max_loc))
+    print()
+    if l_max_val+bias > r_max_val and l_max_loc[1] < max_check and r_max_loc[1] < max_check:
+        if l_max_val >= threshold:
+            print(l_max_loc)
+            print('right')
+            prev = 'r'
+            click_right()
+        else:
+            if prev == 'l':
+                click_left()
+                time.sleep(sl)
+            if prev == 'r':
+                click_right()
+                time.sleep(sl)
+    else:
+        if r_max_val >= threshold:
+            print(r_max_loc)
+            print('left')
+            prev = 'l'
+            click_left()
+        else:
+            if prev == 'l':
+                click_left()
+                time.sleep(sl)
+            if prev == 'r':
+                click_right()
+                time.sleep(sl)
+
+input('ww')
+while True:
+    left = pyautogui.screenshot('left.jpg', (200, 700, 250 - 200, 830 - 700))
+    right = pyautogui.screenshot('right.jpg', (340, 700, 475 - 340, 830 - 700))
+    time.sleep(1)
+    l_left = locate('sprites/obstacle.jpg', 'left.jpg')
+    l_right = locate('sprites/obstacle.jpg', 'right.jpg')
+    print(l_left)
+    print(l_right)
